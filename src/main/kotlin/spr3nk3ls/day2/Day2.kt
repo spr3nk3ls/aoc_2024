@@ -12,10 +12,9 @@ fun main() {
 private fun getSolutionA(filename: String) {
     val reports = getReports(filename)
 
-    val safe = reports.map { report ->
-        // Ascends with at least one
-        safe(report)
-    }.count { it }
+    val safe = reports.count { report ->
+        isSafe(report)
+    }
 
     println(safe)
 }
@@ -23,21 +22,15 @@ private fun getSolutionA(filename: String) {
 private fun getSolutionB(filename: String) {
     val reports = getReports(filename)
 
-    val safe = reports.map { report ->
-        if (safe(report)) {
-            return@map true
-        } else {
-            for (i in 0..reports.size - 1)
-                if (safe(report.filterIndexed{index, _ -> index != i}))
-                    return@map true
-        }
-        false
-    }.count { it }
+    val safe = reports.count { report ->
+        isSafe(report) ||
+                reports.indices.any { i -> isSafe(report.filterIndexed { index, _ -> index != i })}
+    }
 
     println(safe)
 }
 
-private fun safe(report: List<Int>) = (report.zipWithNext { a, b -> a < b }.all { it } &&
+private fun isSafe(report: List<Int>) = (report.zipWithNext { a, b -> a < b }.all { it } &&
         // Ascends with at least one
         report.zipWithNext { a, b -> a + 3 >= b }.all { it }) ||
         //Descends with at least one
