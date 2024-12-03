@@ -1,4 +1,4 @@
-package spr3nk3ls.day1
+package spr3nk3ls.day3
 
 import spr3nk3ls.util.Utils
 
