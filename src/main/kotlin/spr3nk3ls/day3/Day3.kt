@@ -11,8 +11,7 @@ fun main() {
 
 private fun getSolutionA(filename: String) {
     val line = Utils.readLines(filename).joinToString()
-    val result = Regex("mul\\((\\d+),(\\d+)\\)").findAll(line)
-        .sumOf { it.groupValues[1].toInt() * it.groupValues[2].toInt() }
+    val result = sumMuls(line)
     println(result)
 }
 
@@ -21,8 +20,10 @@ private fun getSolutionB(filename: String) {
     val sanitized = line
         .replace(Regex("don't\\(\\).*?do\\(\\)"), "")
         .replace(Regex("don't\\(\\).*"), "")
-    val result = Regex("mul\\((\\d+),(\\d+)\\)")
-        .findAll(sanitized)
-        .sumOf { it.groupValues[1].toInt() * it.groupValues[2].toInt() }
+    val result = sumMuls(sanitized)
     println(result)
 }
+
+private fun sumMuls(line: String) = Regex("mul\\((\\d+),(\\d+)\\)")
+    .findAll(line)
+    .sumOf { it.groupValues[1].toInt() * it.groupValues[2].toInt() }
