@@ -10,17 +10,19 @@ fun main() {
 }
 
 private fun getSolutionA(filename: String) {
-    val line = Utils.readLines(filename).joinToString { it }
+    val line = Utils.readLines(filename).joinToString()
     val result = Regex("mul\\((\\d+),(\\d+)\\)").findAll(line)
-        .sumOf { it.groupValues[1].toInt()*it.groupValues[2].toInt() }
+        .sumOf { it.groupValues[1].toInt() * it.groupValues[2].toInt() }
     println(result)
 }
 
 private fun getSolutionB(filename: String) {
-    val line = Utils.readLines(filename).joinToString { it }
-    val stripDontDo = Regex("don't\\(\\).*?do\\(\\)").replace(line, "")
-    val stripAfterFirstDont = Regex("don't\\(\\).*").replace(stripDontDo, "")
-    val result = Regex("mul\\((\\d+),(\\d+)\\)").findAll(stripAfterFirstDont)
-        .sumOf { it.groupValues[1].toInt()*it.groupValues[2].toInt() }
+    val line = Utils.readLines(filename).joinToString()
+    val sanitized = line
+        .replace(Regex("don't\\(\\).*?do\\(\\)"), "")
+        .replace(Regex("don't\\(\\).*"), "")
+    val result = Regex("mul\\((\\d+),(\\d+)\\)")
+        .findAll(sanitized)
+        .sumOf { it.groupValues[1].toInt() * it.groupValues[2].toInt() }
     println(result)
 }
