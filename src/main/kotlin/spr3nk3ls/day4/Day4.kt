@@ -24,15 +24,22 @@ private fun getSolutionA(filename: String) {
 private fun getSolutionB(filename: String) {
     val rows = Utils.readLines(filename)
     val windows = rows.map { row -> row.windowed(3) }
-    val max = windows.size - 3
-    val squares = (0..max).flatMap { j ->
-        (0..max).map { i -> windows[i][j] + windows[i + 1][j] + windows[i + 2][j] }
+    val range = 0..windows.size - 3
+    val squares = range.flatMap { j ->
+        range.map { i ->
+            windows[i][j] + windows[i + 1][j] + windows[i + 2][j]
+        }
     }
+
+    val regexPatterns = listOf(
+        Regex("M.M.A.S.S"),
+        Regex("M.S.A.M.S"),
+        Regex("S.M.A.S.M"),
+        Regex("S.S.A.M.M")
+    )
+
     val count = squares.count {
-        it.matches(Regex("M.M.A.S.S")) ||
-                it.matches(Regex("M.S.A.M.S")) ||
-                it.matches(Regex("S.M.A.S.M")) ||
-                it.matches(Regex("S.S.A.M.M"))
+        regexPatterns.any { pattern -> pattern.matches(it) }
     }
     println(count)
 }
