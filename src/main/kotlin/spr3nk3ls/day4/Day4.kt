@@ -21,29 +21,6 @@ private fun getSolutionA(filename: String) {
     println(rowCount + colCount + diag1Count + diag2Count + diag3Count + diag4Count)
 }
 
-private fun getSolutionB(filename: String) {
-    val rows = Utils.readLines(filename)
-    val windows = rows.map { row -> row.windowed(3) }
-    val range = 0..windows.size - 3
-    val squares = range.flatMap { j ->
-        range.map { i ->
-            windows[i][j] + windows[i + 1][j] + windows[i + 2][j]
-        }
-    }
-
-    val regexPatterns = listOf(
-        Regex("M.M.A.S.S"),
-        Regex("M.S.A.M.S"),
-        Regex("S.M.A.S.M"),
-        Regex("S.S.A.M.M")
-    )
-
-    val count = squares.count {
-        regexPatterns.any { pattern -> pattern.matches(it) }
-    }
-    println(count)
-}
-
 private fun countXmas(line: String): Int {
     return line.windowed(4).count { "XMAS".equals(it) || "SAMX".equals(it) }
 }
@@ -70,5 +47,28 @@ private fun getDiag3(lines: List<String>): List<String> {
 private fun getDiag4(lines: List<String>): List<String> {
     val max = lines.size - 1
     return (0..max - 1).map { n -> (0..n).map { i -> lines[i][max - n + i] }.joinToString("").reversed() }
+}
+
+private fun getSolutionB(filename: String) {
+    val rows = Utils.readLines(filename)
+    val windows = rows.map { row -> row.windowed(3) }
+    val range = 0..windows.size - 3
+    val squares = range.flatMap { j ->
+        range.map { i ->
+            windows[i][j] + windows[i + 1][j] + windows[i + 2][j]
+        }
+    }
+
+    val regexPatterns = listOf(
+        Regex("M.M.A.S.S"),
+        Regex("M.S.A.M.S"),
+        Regex("S.M.A.S.M"),
+        Regex("S.S.A.M.M")
+    )
+
+    val count = squares.count {
+        regexPatterns.any { pattern -> pattern.matches(it) }
+    }
+    println(count)
 }
 
