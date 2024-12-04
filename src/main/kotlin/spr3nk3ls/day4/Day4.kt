@@ -35,7 +35,7 @@ private fun getDiag1(lines: List<String>, max: Int): List<String> {
 }
 
 private fun getDiag2(lines: List<String>, max: Int): List<String> {
-    return (0..<max).map { n -> (0..n).map { i -> lines[max - i][max - n + i] }.joinToString("").reversed() }
+    return (0..<max).map { n -> (0..n).map { i -> lines[max - i][max - n + i] }.joinToString("") }
 }
 
 private fun getDiag3(lines: List<String>, max: Int): List<String> {
@@ -43,7 +43,7 @@ private fun getDiag3(lines: List<String>, max: Int): List<String> {
 }
 
 private fun getDiag4(lines: List<String>, max: Int): List<String> {
-    return (0..<max).map { n -> (0..n).map { i -> lines[i][max - n + i] }.joinToString("").reversed() }
+    return (0..<max).map { n -> (0..n).map { i -> lines[i][max - n + i] }.joinToString("") }
 }
 
 private fun getSolutionB(filename: String) {
