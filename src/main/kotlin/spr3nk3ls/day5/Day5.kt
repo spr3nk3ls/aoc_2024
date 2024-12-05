@@ -16,12 +16,12 @@ private fun getSolution(filename: String) {
     val result = pages.map {
         val unsorted = it.split(",")
         val sorted = unsorted.sortedWith(RuleComparator(splitRules))
-        Pair(unsorted == sorted, sorted[sorted.size / 2].toInt())
+        (unsorted == sorted) to sorted[sorted.size / 2].toInt()
     }
     //A
-    println(result.filter { (i, _) -> i }.sumOf { (_, j) -> j })
+    println(result.filter { it.first }.sumOf { it.second })
     //B
-    println(result.filter { (i, _) -> !i }.sumOf { (_, j) -> j })
+    println(result.filter { !it.first }.sumOf { it.second })
 }
 
 private class RuleComparator(private val rules: List<Pair<String, String>>) : Comparator<String> {
