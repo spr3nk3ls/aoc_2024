@@ -20,11 +20,11 @@ private fun getSolution(filename: String) {
     println(result.count())
 
     // B
-    val additionalObstacles = result
-    val resultB = additionalObstacles.count { additional ->
-        val sequenceWithAdditionalObstacle = generateSequence(pointer) { move(it, obstacles + additional) }
+    val obstaclesWithAdditional = result.map {obstacles + it}
+    val resultB = obstaclesWithAdditional.count { withAdditional ->
+        val sequenceWithAdditional = generateSequence(pointer) { move(it, withAdditional) }
             .takeWhile { withinBounds(it.index, range) }
-        detectLoop(sequenceWithAdditionalObstacle)
+        detectLoop(sequenceWithAdditional)
     }
     println(resultB)
 }
