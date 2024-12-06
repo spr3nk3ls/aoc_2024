@@ -10,13 +10,13 @@ fun main() {
 private fun getSolution(filename: String) {
     val lines = Utils.readLines(filename)
     val range = lines.first().length to lines.size
-    val obstacles = scanLines(lines, range, '#')
+    val obstacles = scanLines(lines, range, '#').toSet()
     val index = scanLines(lines, range, '^').first()
     val pointer = Pointer(index, 0 to -1)
 
     // A
     val sequence = generateSequence(pointer) { move(it, obstacles) }.takeWhile { withinBounds(it.index, range) }
-    val result = sequence.map { it.index }.distinct()
+    val result = sequence.map { it.index }.toSet()
     println(result.count())
 
     // B
@@ -37,17 +37,14 @@ private fun scanLines(lines: List<String>, range: Pair<Int, Int>, character: Cha
     }
 }
 
-fun move(
-    pointer: Pointer,
-    obstacles: List<Pair<Int, Int>>
-): Pointer {
+fun move(pointer: Pointer, obstacles: Set<Pair<Int, Int>>): Pointer {
     val index = pointer.index
     val direction = pointer.direction
     val newIndex = (index.first + direction.first) to (index.second + direction.second)
-    if (obstacles.contains(newIndex)) {
-        return Pointer(index, rotate(direction))
-    }
-    return Pointer(newIndex, direction)
+    return if (newIndex in obstacles)
+        Pointer(index, rotate(direction))
+    else
+        Pointer(newIndex, direction)
 }
 
 fun rotate(direction: Pair<Int, Int>): Pair<Int, Int> {
