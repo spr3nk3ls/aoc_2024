@@ -12,19 +12,18 @@ private fun getSolution(filename: String) {
     val range = lines.first().length to lines.size
     val obstacles = scanLines(lines, range, '#')
     val index = scanLines(lines, range, '^').first()
-    val direction = 0 to -1
-    val pointer = index to direction
+    val pointer = Pointer(index, 0 to -1)
 
     // A
-    val sequence = generateSequence(pointer) { move(it, obstacles) }.takeWhile { withinBounds(it, range) }
-    val result = sequence.map { it.first }.distinct()
+    val sequence = generateSequence(pointer) { move(it, obstacles) }.takeWhile { withinBounds(it.index, range) }
+    val result = sequence.map { it.index }.distinct()
     println(result.count())
 
     // B
     val additionalObstacles = result
-    val resultB = additionalObstacles.count { obstacle ->
-        val sequenceWithAdditionalObstacle = generateSequence(pointer) { move(it, obstacles + obstacle) }
-            .takeWhile { withinBounds(it, range) }
+    val resultB = additionalObstacles.count { additional ->
+        val sequenceWithAdditionalObstacle = generateSequence(pointer) { move(it, obstacles + additional) }
+            .takeWhile { withinBounds(it.index, range) }
         detectLoop(sequenceWithAdditionalObstacle)
     }
     println(resultB)
@@ -39,34 +38,29 @@ private fun scanLines(lines: List<String>, range: Pair<Int, Int>, character: Cha
 }
 
 fun move(
-    pointer: Pair<Pair<Int, Int>, Pair<Int, Int>>,
+    pointer: Pointer,
     obstacles: List<Pair<Int, Int>>
-): Pair<Pair<Int, Int>, Pair<Int, Int>> {
-    val index = pointer.first
-    val direction = pointer.second
+): Pointer {
+    val index = pointer.index
+    val direction = pointer.direction
     val newIndex = (index.first + direction.first) to (index.second + direction.second)
     if (obstacles.contains(newIndex)) {
-        return index to rotate(direction)
+        return Pointer(index, rotate(direction))
     }
-    return newIndex to direction
+    return Pointer(newIndex, direction)
 }
 
 fun rotate(direction: Pair<Int, Int>): Pair<Int, Int> {
     return (-direction.second to direction.first)
 }
 
-fun withinBounds(indexToDirection: Pair<Pair<Int, Int>, Pair<Int, Int>>, range: Pair<Int, Int>): Boolean {
-    val index = indexToDirection.first
+fun withinBounds(index: Pair<Int, Int>, range: Pair<Int, Int>): Boolean {
     return index.first >= 0 && index.first < range.first && index.second >= 0 && index.second < range.second
 }
 
-fun detectLoop(sequence: Sequence<Pair<Pair<Int, Int>, Pair<Int, Int>>>): Boolean {
-    val seen = mutableSetOf<Pair<Pair<Int, Int>, Pair<Int, Int>>>()
-    for (element in sequence) {
-        if (element in seen) {
-            return true
-        }
-        seen.add(element)
-    }
-    return false
+fun detectLoop(sequence: Sequence<Pointer>): Boolean {
+    val seen = mutableSetOf<Pointer>()
+    return sequence.any { !seen.add(it) }
 }
+
+data class Pointer(val index: Pair<Int, Int>, val direction: Pair<Int, Int>)
