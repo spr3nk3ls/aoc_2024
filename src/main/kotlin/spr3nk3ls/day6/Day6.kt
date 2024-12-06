@@ -20,7 +20,7 @@ private fun getSolution(filename: String) {
     println(result.count())
 
     // B
-    val obstaclesWithAdditional = result.map {obstacles + it}
+    val obstaclesWithAdditional = result.map { obstacles + it }
     val resultB = obstaclesWithAdditional.count { withAdditional ->
         val sequenceWithAdditional = generateSequence(pointer) { move(it, withAdditional) }
             .takeWhile { withinBounds(it.index, range) }
