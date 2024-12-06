@@ -37,7 +37,7 @@ private fun scanLines(lines: List<String>, range: Pair<Int, Int>, character: Cha
     }
 }
 
-fun move(pointer: Pointer, obstacles: Set<Pair<Int, Int>>): Pointer {
+private fun move(pointer: Pointer, obstacles: Set<Pair<Int, Int>>): Pointer {
     val index = pointer.index
     val direction = pointer.direction
     val newIndex = (index.first + direction.first) to (index.second + direction.second)
@@ -47,17 +47,17 @@ fun move(pointer: Pointer, obstacles: Set<Pair<Int, Int>>): Pointer {
         Pointer(newIndex, direction)
 }
 
-fun rotate(direction: Pair<Int, Int>): Pair<Int, Int> {
+private fun rotate(direction: Pair<Int, Int>): Pair<Int, Int> {
     return (-direction.second to direction.first)
 }
 
-fun withinBounds(index: Pair<Int, Int>, range: Pair<Int, Int>): Boolean {
+private fun withinBounds(index: Pair<Int, Int>, range: Pair<Int, Int>): Boolean {
     return index.first >= 0 && index.first < range.first && index.second >= 0 && index.second < range.second
 }
 
-fun detectLoop(sequence: Sequence<Pointer>): Boolean {
+private fun detectLoop(sequence: Sequence<Pointer>): Boolean {
     val seen = mutableSetOf<Pointer>()
     return sequence.any { !seen.add(it) }
 }
 
-data class Pointer(val index: Pair<Int, Int>, val direction: Pair<Int, Int>)
+private data class Pointer(val index: Pair<Int, Int>, val direction: Pair<Int, Int>)
