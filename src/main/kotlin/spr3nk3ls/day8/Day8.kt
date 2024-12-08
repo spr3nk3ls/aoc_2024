@@ -3,38 +3,24 @@ package spr3nk3ls.day8
 import spr3nk3ls.util.Utils
 
 fun main() {
-    getSolutionA("day8/example.txt")
-    getSolutionA("day8/input.txt")
-    getSolutionB("day8/example.txt")
-    getSolutionB("day8/input.txt")
+    getSolution("day8/example.txt", Node::projectOne)
+    getSolution("day8/input.txt", Node::projectOne)
+    getSolution("day8/example.txt", Node::projectAll)
+    getSolution("day8/input.txt", Node::projectAll)
 }
 
-private fun getSolutionA(filename: String) {
-    val lines = Utils.readLines(filename)
-    val range = lines.first().length to lines.size
-    val nodes = scanLines(lines, range).toSet()
-    val antinodes = nodes.groupBy { it.frequency }.flatMap { freqNodes ->
-        freqNodes.value.flatMap { freqNode1 ->
-            freqNodes.value.filter { it != freqNode1 }.map { freqNode2 ->
-                freqNode1.project(freqNode2)
-            }
-        }
-    }.filter { withinBounds(it, range) }.toSet()
-    println(antinodes.size)
-}
-
-private fun getSolutionB(filename: String) {
+private fun getSolution(filename: String, project: (Node, Node, Pair<Int, Int>) -> Set<Pair<Int, Int>>) {
     val lines = Utils.readLines(filename)
     val range = lines.first().length to lines.size
     val nodes = scanLines(lines, range).toSet()
     val antinodes = nodes.groupBy { it.frequency }.flatMap { freqNodes ->
         freqNodes.value.flatMap { freqNode1 ->
             freqNodes.value.filter { it != freqNode1 }.flatMap { freqNode2 ->
-                freqNode1.projectOn(freqNode2, range)
+                project.invoke(freqNode1, freqNode2, range)
             }
         }
     }.toSet()
-    println((antinodes + nodes.map { it.index }).size)
+    println(antinodes.size)
 }
 
 private fun scanLines(lines: List<String>, range: Pair<Int, Int>): List<Node> {
@@ -48,14 +34,16 @@ private fun scanLines(lines: List<String>, range: Pair<Int, Int>): List<Node> {
 }
 
 private data class Node(val index: Pair<Int, Int>, val frequency: Char) {
-    fun project(otherNode: Node): Pair<Int, Int> {
+    fun projectOne(otherNode: Node, range: Pair<Int, Int>): Set<Pair<Int, Int>> {
         val difference = (index.first - otherNode.index.first) to (index.second - otherNode.index.second)
-        return index.first + difference.first to index.second + difference.second
+        return listOf(index.first + difference.first to index.second + difference.second)
+            .filter { withinBounds(it, range) }
+            .toSet()
     }
 
-    fun projectOn(otherNode: Node, range: Pair<Int, Int>): Set<Pair<Int, Int>> {
+    fun projectAll(otherNode: Node, range: Pair<Int, Int>): Set<Pair<Int, Int>> {
         val difference = (index.first - otherNode.index.first) to (index.second - otherNode.index.second)
-        return generateSequence(1) { it + 1 }
+        return generateSequence(0) { it + 1 }
             .map { index.first + it * difference.first to index.second + it * difference.second }
             .takeWhile { withinBounds(it, range) }
             .toSet()
