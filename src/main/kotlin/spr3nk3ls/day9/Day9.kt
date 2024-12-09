@@ -63,8 +63,9 @@ private fun getSolutionB(filename: String) {
 private fun putInto(files: MutableList<File>, fileToInsert: File): MutableList<File> {
     files.indices.forEach { index ->
         val file = files[index]
-        val toInsert = file.idNumber == -1 && (file.diskSpace >= fileToInsert.diskSpace) && index < files.lastIndexOf(fileToInsert)
-        if(toInsert) {
+        val toInsert =
+            file.idNumber == -1 && (file.diskSpace >= fileToInsert.diskSpace) && index < files.lastIndexOf(fileToInsert)
+        if (toInsert) {
             val emptySpace = files[index]
             val removedIndex = files.indexOfLast { it == fileToInsert }
             files[removedIndex] = File(-1, fileToInsert.diskSpace)
