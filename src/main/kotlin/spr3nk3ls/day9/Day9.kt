@@ -4,7 +4,7 @@ import spr3nk3ls.util.Utils
 
 fun main() {
     getSolutionA("day9/example.txt")
-//    getSolutionA("day9/input.txt")
+    getSolutionA("day9/input.txt")
     getSolutionB("day9/example.txt")
     getSolutionB("day9/input.txt")
 }
