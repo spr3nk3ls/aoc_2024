@@ -5,13 +5,13 @@ import spr3nk3ls.util.Utils
 val directions = listOf(0 to 1, 0 to -1, 1 to 0, -1 to 0)
 
 fun main() {
-    getSolution("day10/example.txt")
-    getSolution("day10/input.txt")
-//    getSolution("day8/example.txt", Node::projectAll)
-//    getSolution("day8/input.txt", Node::projectAll)
+    getSolution("day10/example.txt", ::numberOfTrailsA)
+    getSolution("day10/input.txt", ::numberOfTrailsA)
+    getSolution("day10/example.txt", ::numberOfTrailsB)
+    getSolution("day10/input.txt", ::numberOfTrailsB)
 }
 
-private fun getSolution(filename: String) {
+private fun getSolution(filename: String, numberOfTrails: (Pair<Int, Int>, List<List<Int>>, Pair<Int, Int>) -> Int) {
     val lines = Utils.readLines(filename)
     val range = lines.first().length to lines.size
     val grid = lines.map { it.toCharArray().map { it.digitToInt() } }
@@ -26,10 +26,9 @@ fun getTrailheads(grid: List<List<Int>>, range: Pair<Int, Int>): List<Pair<Int, 
             grid[y][x] == 0
         }.map { x -> x to y }
     }
-
 }
 
-private fun numberOfTrails(
+private fun numberOfTrailsA(
     pair: Pair<Int, Int>, grid: List<List<Int>>, range: Pair<Int, Int>
 ): Int {
     val trailhead = Hiker(pair, grid[pair.second][pair.first])
@@ -41,6 +40,20 @@ private fun numberOfTrails(
         }
     }
     return nines.size
+}
+
+private fun numberOfTrailsB(
+    pair: Pair<Int, Int>, grid: List<List<Int>>, range: Pair<Int, Int>
+): Int {
+    val trailhead = Hiker(pair, grid[pair.second][pair.first])
+    var hikers = listOf(trailhead)
+    var nines = 0
+    while (hikers.size > 0) {
+        hikers = hikers.onEach { if (it.height == 9) nines++ }.flatMap {
+            it.hike(grid, range)
+        }
+    }
+    return nines
 }
 
 private data class Hiker(val position: Pair<Int, Int>, val height: Int) {
