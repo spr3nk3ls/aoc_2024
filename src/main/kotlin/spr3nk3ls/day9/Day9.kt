@@ -4,9 +4,11 @@ import spr3nk3ls.util.Utils
 
 fun main() {
     getSolutionA("day9/example.txt")
-    getSolutionA("day9/input.txt")
+//    getSolutionA("day9/input.txt")
     getSolutionB("day9/example.txt")
-    getSolutionB("day9/input.txt")
+//    getSolutionB("day9/input.txt")
+    getSolutionC("day9/example.txt")
+//    getSolutionB("day9/input.txt")
 }
 
 private fun getSolutionA(filename: String) {
@@ -47,7 +49,7 @@ private fun getSolutionB(filename: String) {
             -1, line[index].digitToInt()
         )
     }
-    var files = immutableFiles.toMutableList()
+    val files = immutableFiles.toMutableList()
     val reversed = files.reversed().filter { it.idNumber != -1 }
 
     reversed.forEach {
@@ -55,9 +57,50 @@ private fun getSolutionB(filename: String) {
     }
 
     val unwrapped = unwrap(files)
+
+    println(unwrapped)
+
     println(unwrapped.indices.filter { unwrapped[it].idNumber != -1 }.sumOf {
         (it * unwrapped[it].idNumber).toLong()
     })
+}
+
+private fun getSolutionC(filename: String) {
+    val line = Utils.readLines(filename).first()
+    val immutableFiles = line.indices.map { index ->
+        if (index % 2 == 0) File(index / 2, line[index].digitToInt()) else File(
+            -1, line[index].digitToInt()
+        )
+    }
+    val files = immutableFiles
+    val reversed = files.reversed().filter { it.idNumber != -1 }.toMutableList()
+
+    val mappedFiles = files.flatMap {
+        if(it.idNumber == -1) fillIn(it, reversed) else listOf(it)
+    }
+
+    val unwrapped = unwrap(mappedFiles)
+
+    println(unwrapped)
+
+    println(unwrapped.indices.filter { unwrapped[it].idNumber != -1 }.sumOf {
+        (it * unwrapped[it].idNumber).toLong()
+    })
+}
+
+private fun fillIn(emptyFile: File, reversed: MutableList<File>): List<File> {
+    var diskSpace = emptyFile.diskSpace
+    println(diskSpace)
+    val fillin = reversed.filter {
+        it.diskSpace <= diskSpace
+    }.takeWhile {
+        diskSpace -= it.diskSpace
+        diskSpace > 0
+    }
+    reversed.removeAll(fillin)
+    val lastDiskspace = diskSpace + if(fillin.isNotEmpty()) fillin.last().diskSpace else 0
+    println(fillin + File(-1, lastDiskspace))
+    return fillin + File(-1, lastDiskspace)
 }
 
 private fun putInto(files: MutableList<File>, fileToInsert: File): MutableList<File> {
