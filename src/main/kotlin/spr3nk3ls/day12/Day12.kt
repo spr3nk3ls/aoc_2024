@@ -23,56 +23,92 @@ private fun getSolution(filename: String) {
     }
     val grid = (0..<range.second).flatMap { y ->
         (0..<range.first).map { x ->
-            var fences = 0
-            val connections = mutableListOf<Pair<Int, Int>>()
-            if (x == 0 || horizontalFences[y][x - 1]) {
-                fences++
-            } else {
-                connections.add(Pair(x - 1, y))
-            }
-            if (x == range.first - 1 || horizontalFences[y][x]) {
-                fences++
-            } else {
-                connections.add(Pair(x + 1, y))
-            }
-            if (y == 0 || verticalFences[y - 1][x]) {
-                fences++
-            } else {
-                connections.add(Pair(x, y - 1))
-            }
-            if (y == range.second - 1 || verticalFences[y][x]) {
-                fences++
-            } else {
-                connections.add(Pair(x, y + 1))
-            }
-            (x to y) to (fences to connections)
+            val plot = getPlot(x, y, horizontalFences, verticalFences, range)
+            (x to y) to (plot)
         }
     }.toMap().toMutableMap()
 
-    println(grid)
-    var regions = 0L
+    var regionsFences = 0L
+    var regionsEdges = 0L
     while (grid.isNotEmpty()) {
         val regionSeed = grid.keys.first()
-        val region = mutableListOf<Int>()
-        addToRegion(region, regionSeed, grid, mutableSetOf(regionSeed))
-        regions += region.sum() * region.size
+        val regionFences = mutableListOf<Int>()
+        val regionEdges = mutableListOf<Int>()
+        addToRegion(regionFences, regionEdges, regionSeed, grid, mutableSetOf(regionSeed))
+        regionsFences += regionFences.sum() * regionFences.size
+        regionsEdges += regionEdges.sum() * regionEdges.size
     }
-    println(regions)
+    //A
+    println(regionsFences)
+    //B
+    println(regionsEdges)
 }
 
-fun addToRegion(
-    region: MutableList<Int>,
+private fun getPlot(
+    x: Int,
+    y: Int,
+    horizontalFences: List<List<Boolean>>,
+    verticalFences: List<List<Boolean>>,
+    range: Pair<Int, Int>
+): Plot {
+    val connections = mutableListOf<Pair<Int, Int>>()
+    val westFence = x == 0 || horizontalFences[y][x - 1]
+    val eastFence = x == range.first - 1 || horizontalFences[y][x]
+    val northFence = y == 0 || verticalFences[y - 1][x]
+    val southFence = y == range.second - 1 || verticalFences[y][x]
+    val fences = listOf(
+        westFence,
+        eastFence,
+        northFence,
+        southFence
+    ).filter { it }.size
+    val westNorthFence = x > 0 && (y == 0 || verticalFences[y - 1][x - 1])
+    val westSouthFence = x > 0 && (y == range.second - 1 || verticalFences[y][x - 1])
+    val eastNorthFence = x < range.first - 1 && (y == 0 || verticalFences[y - 1][x + 1])
+    val eastSouthFence = x < range.first - 1 && (y == range.second - 1 || verticalFences[y][x + 1])
+    val northWestFence = y > 0 && (x == 0 || horizontalFences[y - 1][x - 1])
+    val northEastFence = y > 0 && (x == range.first - 1 || horizontalFences[y - 1][x])
+    val southWestFence = y < range.second - 1 && (x == 0 || horizontalFences[y + 1][x - 1])
+    val southEastFence = y < range.second - 1 && (x == range.first - 1 || horizontalFences[y + 1][x])
+    val edges = listOf(
+        westFence && northFence,
+        westFence && southFence,
+        eastFence && northFence,
+        eastFence && southFence,
+        westNorthFence && northWestFence && !(northFence || westFence),
+        eastNorthFence && northEastFence && !(northFence || eastFence),
+        westSouthFence && southWestFence && !(westFence || southFence),
+        eastSouthFence && southEastFence && !(eastFence || southFence),
+    ).filter { it }.size
+    if (!westFence)
+        connections.add(Pair(x - 1, y))
+    if (!eastFence)
+        connections.add(Pair(x + 1, y))
+    if (!northFence)
+        connections.add(Pair(x, y - 1))
+    if (!southFence)
+        connections.add(Pair(x, y + 1))
+
+    return Plot(fences, edges, connections)
+}
+
+private fun addToRegion(
+    regionFences: MutableList<Int>,
+    regionEdges: MutableList<Int>,
     seed: Pair<Int, Int>,
-    grid: MutableMap<Pair<Int, Int>, Pair<Int, MutableList<Pair<Int, Int>>>>,
+    grid: MutableMap<Pair<Int, Int>, Plot>,
     visited: MutableSet<Pair<Int, Int>>
 ) {
     val plot = grid.remove(seed)!!
-    region.add(plot.first)
-    val toVisit = plot.second.filter {
+    regionFences.add(plot.fences)
+    regionEdges.add(plot.edges)
+    val toVisit = plot.connections.filter {
         it !in visited && it in grid.keys
     }
     visited.addAll(toVisit)
     toVisit.map {
-        addToRegion(region, it, grid, visited)
+        addToRegion(regionFences, regionEdges, it, grid, visited)
     }
 }
+
+private data class Plot(val fences: Int, val edges: Int, val connections: MutableList<Pair<Int, Int>>)
