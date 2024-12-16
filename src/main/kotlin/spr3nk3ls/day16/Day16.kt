@@ -17,7 +17,7 @@ fun getSolution(filename: String) {
     val nodes = grid.indices.flatMap { y ->
         grid[y].indices.map { x ->
             val startOrEnd = grid[y][x] == 'S' || grid[y][x] == 'E'
-            if (grid[y][x] == '.' || startOrEnd) {
+            if (isHallway(x to y, grid)) {
                 val connections = Direction.entries
                     .filter { grid[it.dir.second + y][it.dir.first + x] == '.' }.toMutableSet()
                 if (connections.size >= 3 || startOrEnd) {
@@ -30,39 +30,57 @@ fun getSolution(filename: String) {
             }
         }
     }.filterNotNull()
-    val nodeMap = mutableMapOf<Pair<Int, Int>, MutableMap<Pair<Int, Int>, Pair<Int, Int>>>()
+    nodes.forEach { node -> println(node) }
     val nodeSet = nodes.unzip().first.toSet()
-    nodes.forEach { node ->
-        node.second.forEach { initialDirection ->
-            var dir = initialDirection.dir
-            var pos = node.first.first + dir.first to node.first.second + dir.second
+    val result = nodes.map { node ->
+        val nodeConnections = node.second.map {
+            it.dir
+        }.filter { isHallway(node.first.first + it.first to node.first.second + it.second, grid)
+        }.map { initDir ->
+            var pos = node.first.first + initDir.first to node.first.second + initDir.second
+            var dir = initDir
             while (pos !in nodeSet){
-                while(grid[pos.second][pos.first] == '.'){
-                    //TODO one too far
-                    pos = pos.first + dir.first to pos.second + dir.second
+                var nextPos = pos
+                while(isHallway(nextPos, grid)){
+                    pos = nextPos
+                    nextPos = pos.first + dir.first to pos.second + dir.second
                 }
-                val nextDir = (-dir.second to dir.first)
-                val nextPos = pos.first + nextDir.first to pos.second + nextDir.second
-                if(grid[nextPos.second][nextPos.first] == '.') {
-                    dir = nextDir
-                    // TODO if pos + turned dir is dot, then turn
-                    //TODO
-                    break
+                var newDir = (-dir.second to dir.first)
+                if(isHallway(pos.first + newDir.first to pos.second + newDir.second, grid)){
+                    dir = newDir
+                    continue
                 }
-                //TODO
+                newDir = (dir.second to -dir.first)
+                if(isHallway(pos.first + newDir.first to pos.second + newDir.second, grid)){
+                    dir = newDir
+                    continue
+                }
+                println("dead end")
+                println(pos)
+                // Dead end
                 break
             }
-            var entry = nodeMap[node.first]
-            if(entry == null) {
-                nodeMap[node.first] = mutableMapOf()
-                entry = nodeMap[node.first]
-            }
-            entry!!.put(dir, pos)
+            (dir to pos)
+//            println(pos)
+//            println()
+//            var entry = nodeMap[node.first]
+//            if(entry == null) {
+//                nodeMap[node.first] = mutableMapOf()
+//                entry = nodeMap[node.first]
+//            }
+//            entry!!.put(dir, pos)
             //calculate distance to second node or null if dead end
             //connect both nodes (add other node to map if unavailable)
             //then remove this direction and opposite direction of other node
-        }
-    }
-    print(nodeMap)
-    println(nodes)
+        }.toMap()
+        node.first to nodeConnections
+//        println(nodeConnections)
+//    }.filter { it.second.isNotEmpty()
+    }.toMap()
+    result.entries.forEach(::println)
+//    println(nodes)
+}
+
+fun isHallway(pair: Pair<Int, Int>, grid: List<String>): Boolean {
+    return grid[pair.second][pair.first] in setOf('.','S','E')
 }
