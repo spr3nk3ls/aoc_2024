@@ -1,123 +1,143 @@
 package spr3nk3ls.day17
 
-import spr3nk3ls.day17.Day17.getSolution
+import spr3nk3ls.day17.Day17.execute
 import java.io.File
-import java.math.BigInteger
-
-val TWO: BigInteger = BigInteger.valueOf(2)
-
+import java.math.BigInteger.*
 
 fun main() {
-    getSolution("day17/example.txt")
-    getSolution("day17/input.txt")
+    getSolutionA("day17/example1.txt")
+    getSolutionA("day17/input.txt")
+//    getSolutionB("day17/example2.txt")
+    // 110270259759514 too high
+    getSolutionB("day17/input.txt")
+}
+
+fun getSolutionA(filename: String) {
+    val (registerValues, instructions) = readAndSplitFile(filename)
+    val register = listOf('A', 'B', 'C').zip(registerValues).toMap().toMutableMap()
+    val output = execute(instructions, register)
+    println(output.joinToString(",") { it.toString() })
+}
+
+fun getSolutionB(filename: String) {
+    val (_, instructions) = readAndSplitFile(filename)
+    var result = 0L
+    val register = mutableMapOf('A' to 0L, 'B' to 0L, 'C' to 0L)
+    val initial =
+        (valueOf(8L).pow(15).times(valueOf(3)))
+            .add((valueOf(8L).pow(12)))
+            .add((valueOf(8L).pow(11)).times(valueOf(8)))
+            .add((valueOf(8L).pow(10)).times(valueOf(2)))
+    for(i in generateSequence(initial){ it.add(ONE) }) {
+        register['A'] = i.toLong()
+        register['B'] = 0
+        register['C'] = 0
+        val output = execute(instructions, register)
+        if (instructions == output){
+            result = i.toLong()
+            break
+        }
+        println(output)
+    }
+    println(result)
+}
+
+private fun readAndSplitFile(filename: String): Pair<List<Long>, List<Long>> {
+    val (reg, instr) = File("src/main/resources/$filename").readText(Charsets.UTF_8).split("\n\n")
+    val regs = reg.split("\n").map { it.split(": ").last().toLong() }
+    val ins = instr.split(": ").last().split(",").map { it.toLong() }
+    return regs to ins
 }
 
 object Day17 {
-    fun getSolution(filename: String) {
-        val (registerValues, instructions) = readAndSplitFile(filename)
-        val register = listOf('A', 'B', 'C').zip(registerValues).toMap().toMutableMap()
-        val output = execute(instructions, register)
-        println(output)
-    }
-
     fun execute(
-        instructions: List<Int>,
-        register: MutableMap<Char, Int>
-    ): String {
+        instructions: List<Long>, register: MutableMap<Char, Long>
+    ): List<Long> {
         var pointer = 0
-        val output = mutableListOf<Int>()
+        var output = listOf<Long>()
         while (pointer < instructions.size - 1) {
             val ins = instructions[pointer]
             val op = instructions[pointer + 1]
-            pointer = operate(ins, op, register, output, pointer)
+            val (point, out) = operate(ins, op, register, output, pointer)
+            pointer = point
+            output = out
         }
-        return output.map { it.toString() }.joinToString(",")
+        return output.toList()
     }
 
     private fun operate(
-        ins: Int,
-        op: Int,
-        register: MutableMap<Char, Int>,
-        output: MutableList<Int>,
-        pointer: Int
-    ): Int {
+        ins: Long, op: Long, register: MutableMap<Char, Long>, output: List<Long>, pointer: Int
+    ): Pair<Int, List<Long>> {
         var newPointer = pointer
+        var newOutput = output
         when (ins) {
-            0 -> adv(op, register)
-            1 -> bxl(op, register)
-            2 -> bst(op, register)
-            3 -> newPointer = jnz(op, register, pointer)
-            4 -> bxc(register)
-            5 -> out(op, register, output)
-            6 -> bdv(op, register)
-            7 -> cdv(op, register)
+            0L -> adv(op, register)
+            1L -> bxl(op, register)
+            2L -> bst(op, register)
+            3L -> newPointer = jnz(op, register, pointer)
+            4L -> bxc(register)
+            5L -> newOutput = out(op, register, output)
+            6L -> bdv(op, register)
+            7L -> cdv(op, register)
             else -> {
                 println("error")
             }
         }
-        if (ins != 3) {
+        if (ins != 3L) {
             newPointer += 2
         }
-        return newPointer
+        return newPointer to newOutput
     }
 
-    private fun adv(op: Int, register: MutableMap<Char, Int>) {
-        val combo = combo(op, register)
-        register['A'] = register['A']!! / TWO.pow(combo).toInt()
+    private fun adv(op: Long, register: MutableMap<Char, Long>) {
+        val combo = combo(op, register).toInt()
+        register['A'] = register['A']!! / TWO.pow(combo).toLong()
     }
 
-    private fun bdv(op: Int, register: MutableMap<Char, Int>) {
-        val combo = combo(op, register)
-        register['B'] = register['A']!! / TWO.pow(combo).toInt()
+    private fun bdv(op: Long, register: MutableMap<Char, Long>) {
+        val combo = combo(op, register).toInt()
+        register['B'] = register['A']!! / TWO.pow(combo).toLong()
     }
 
-    private fun cdv(op: Int, register: MutableMap<Char, Int>) {
-        val combo = combo(op, register)
-        register['C'] = register['A']!! / TWO.pow(combo).toInt()
+    private fun cdv(op: Long, register: MutableMap<Char, Long>) {
+        val combo = combo(op, register).toInt()
+        register['C'] = register['A']!! / TWO.pow(combo).toLong()
     }
 
-    private fun bxl(op: Int, register: MutableMap<Char, Int>) {
+    private fun bxl(op: Long, register: MutableMap<Char, Long>) {
         register['B'] = register['B']!!.xor(op)
     }
 
-    private fun bxc(register: MutableMap<Char, Int>) {
+    private fun bxc(register: MutableMap<Char, Long>) {
         register['B'] = register['B']!!.xor(register['C']!!)
     }
 
-    private fun bst(op: Int, register: MutableMap<Char, Int>) {
+    private fun bst(op: Long, register: MutableMap<Char, Long>) {
         val combo = combo(op, register)
         register['B'] = combo % 8
     }
 
-    private fun jnz(op: Int, register: MutableMap<Char, Int>, pointer: Int): Int {
-        if (register['A']!! == 0)
-            return pointer + 2
-        return op
+    private fun jnz(op: Long, register: MutableMap<Char, Long>, pointer: Int): Int {
+        if (register['A']!! == 0L) return pointer + 2
+        return op.toInt()
     }
 
-    private fun out(op: Int, register: MutableMap<Char, Int>, output: MutableList<Int>) {
+    private fun out(op: Long, register: MutableMap<Char, Long>, output: List<Long>): List<Long> {
         val combo = combo(op, register)
-        output.add(combo % 8)
+        return output + (combo % 8L)
     }
 
-    private fun combo(op: Int, register: Map<Char, Int>): Int {
+    private fun combo(op: Long, register: Map<Char, Long>): Long {
         return when (op) {
-            4 -> register['A']!!
-            5 -> register['B']!!
-            6 -> register['C']!!
-            7 -> {
+            4L -> register['A']!!
+            5L -> register['B']!!
+            6L -> register['C']!!
+            7L -> {
                 println("error")
-                -1
+                -1L
             }
 
             else -> op
         }
-    }
-
-    private fun readAndSplitFile(filename: String): Pair<List<Int>, List<Int>> {
-        val (reg, instr) = File("src/main/resources/$filename").readText(Charsets.UTF_8).split("\n\n")
-        val regs = reg.split("\n").map { it.split(": ").last().toInt() }
-        val ins = instr.split(": ").last().split(",").map { it.toInt() }
-        return regs to ins
     }
 }
