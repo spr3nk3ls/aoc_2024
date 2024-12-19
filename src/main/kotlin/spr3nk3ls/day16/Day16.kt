@@ -35,8 +35,41 @@ fun getSolution(filename: String) {
             node
         }
     }
-    val result = dijkstra(nodeMap, start)
+    val (result, predecessors) = dijkstra(nodeMap, start, end)
     println(result[end]!! - 1000)
+
+    val paths = mutableSetOf<List<Pair<Int, Int>>>()
+    var pathgen = setOf(listOf(end))
+    while (pathgen.isNotEmpty()) {
+        pathgen = pathgen.filter {
+            predecessors[it.last()] != null
+        }.flatMap { list ->
+            predecessors[list.last()]!!.map {
+                list + it
+            }
+        }.toSet()
+        pathgen.filter { it.last() == start }.forEach { paths.add(it) }
+    }
+    val count = paths.flatMap { path ->
+        path.indices.drop(1).flatMap { i ->
+            val j = path[i - 1]
+            val k = path[i]
+            if (j.first == k.first) {
+                if (j.second < k.second) {
+                    (j.second..k.second).map { path[i].first to it }
+                } else {
+                    (k.second..j.second).map { path[i].first to it }
+                }
+            } else {
+                if (j.first < k.first) {
+                    (j.first..k.first).map { it to j.second }
+                } else {
+                    (k.first..j.first).map { it to j.second }
+                }
+            }
+        }
+    }.toSet()
+    println(count.size)
 }
 
 private fun getNodeMap(grid: List<String>): Map<Pair<Int, Int>, List<Pair<Pair<Int, Int>, Int>>> {
@@ -72,9 +105,10 @@ private fun corner(connections: Set<Direction>): Boolean {
 }
 
 private fun dijkstra(
-    graph: Map<Pair<Int, Int>, List<Pair<Pair<Int, Int>, Int>>>, start: Pair<Int, Int>
-): Map<Pair<Int, Int>, Int> {
+    graph: Map<Pair<Int, Int>, List<Pair<Pair<Int, Int>, Int>>>, start: Pair<Int, Int>, end: Pair<Int, Int>
+): Pair<MutableMap<Pair<Int, Int>, Int>, MutableMap<Pair<Int, Int>, MutableSet<Pair<Int, Int>>>> {
     val distances = mutableMapOf<Pair<Int, Int>, Int>().withDefault { Int.MAX_VALUE }
+    val predecessors = mutableMapOf<Pair<Int, Int>, MutableSet<Pair<Int, Int>>>()
     val priorityQueue = PriorityQueue<Pair<Pair<Int, Int>, Int>>(compareBy { it.second }).apply { add(start to 0) }
 
     distances[start] = 0
@@ -83,13 +117,19 @@ private fun dijkstra(
         val (node, currentDist) = priorityQueue.poll()
         graph[node]?.forEach { (adjacent, weight) ->
             val totalDist = currentDist + weight + 1000
-            if (totalDist < distances.getValue(adjacent)) {
+            if (totalDist <= distances.getValue(adjacent)) {
+                if (totalDist < distances.getValue(adjacent)) {
+                    predecessors[adjacent] = mutableSetOf()
+                }
                 distances[adjacent] = totalDist
+                if (predecessors[adjacent] == null)
+                    predecessors[adjacent] = mutableSetOf()
+                predecessors[adjacent]!!.add(node)
                 priorityQueue.add(adjacent to totalDist)
             }
         }
     }
-    return distances
+    return distances to predecessors
 }
 
 fun isHallway(pair: Pair<Int, Int>, grid: List<String>): Boolean {
