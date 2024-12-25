@@ -26,29 +26,27 @@ fun getSolutionA(filename: String) {
 
 fun getSolutionB(filename: String) {
     val (towels, patterns) = readAndSplitFile(filename)
-    val total = patterns.size
-    val result = patterns.sumOf { pattern ->
-        val index = patterns.indexOf(pattern)
-        println("Taken $index of $total patterns")
-        var matches = setOf(listOf(""))
-        var count = 0
-        val len = pattern.length
-        while (matches.isNotEmpty()) {
-            matches = matches
-                .asSequence()
-                .flatMap { match -> towels.map { match + it } }
-                .map { it to it.joinToString("") }
-                .filter { (_, str) -> pattern.startsWith(str) }
-                .filter { (_, str) -> str.length <= len }
-                .map { (ls, _) -> ls }
-                .toSet()
-            val exactMatches = matches.filter { it.joinToString("") == pattern }
-            count += exactMatches.size
-            matches = matches.filter { it !in exactMatches }.toSet()
-        }
-        count
+
+    val result = patterns.map { recursive(it, towels, mutableMapOf<String, Long>()) }
+
+    println(result.sum())
+}
+
+private fun recursive(toSolve: String, towels: List<String>, cache: MutableMap<String, Long>): Long {
+    if (cache.containsKey(toSolve)) {
+        return cache[toSolve]!!
     }
-    println(result)
+    val result = towels.filter {
+        toSolve.startsWith(it)
+    }.sumOf {
+        if (toSolve == it) {
+            1
+        } else {
+            recursive(toSolve.substring(it.length), towels, cache)
+        }
+    }
+    cache[toSolve] = result
+    return result
 }
 
 private fun readAndSplitFile(filename: String): Pair<List<String>, List<String>> {
