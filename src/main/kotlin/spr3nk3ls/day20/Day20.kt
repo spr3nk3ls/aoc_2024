@@ -4,11 +4,11 @@ import spr3nk3ls.util.Utils
 import kotlin.math.abs
 
 fun main() {
-    getSolution("day20/example.txt")
-    getSolution("day20/input.txt")
+    getSolution("day20/input.txt", 2)
+    getSolution("day20/input.txt", 20)
 }
 
-fun getSolution(filename: String) {
+fun getSolution(filename: String, distance: Int) {
     val grid = Utils.readLines(filename)
     val hallway = grid.indices.flatMap { y ->
         grid[y].indices.filter { x ->
@@ -27,31 +27,19 @@ fun getSolution(filename: String) {
     }.first()
     val route = calculateRoute(hallway, start, end)
 
-    val range = grid.first().length to grid.size
-
     val routeWithDistance = route.zip((0..<route.size)).toMap()
 
-    val horizontalBridges = (1..<range.second - 1).flatMap { y ->
-        (1..<range.first - 1).filter {
-            it to y !in route
-        }.filter {
-            it - 1 to y in route && it + 1 to y in route
-        }.map { (it to y) to abs(routeWithDistance[it - 1 to y]!! - routeWithDistance[it + 1 to y]!!) }
-    }
-    val verticalBridges = (1..<range.second - 1).flatMap { y ->
-        (1..<range.first - 1).filter {
-            it to y !in route
-        }.filter {
-            it to y - 1 in route && it to y + 1 in route
-        }.map { (it to y) to abs(routeWithDistance[it to y - 1]!! - routeWithDistance[it to y + 1]!!) }
-    }
+    val manhattans = route.map { mh ->
+        manhattansOf(mh, distance)
+            .asSequence()
+            .filter { it.first in route }
+            .filter { distance != 2 || it.second == 2 }
+            .map { routeWithDistance[it.first]!! - routeWithDistance[mh]!! - it.second }
+            .filter { it >= 100 }
+            .toList()
+    }.filter { it.isNotEmpty() }.flatten()
 
-    val saves = (horizontalBridges + verticalBridges).map { it.second }.map { it - 2 }.filter { it > 0 }.sorted()
-    println(saves.distinct().map { save ->
-        save to saves.count { it == save }
-    })
-
-    println(saves.count { it >= 100 })
+    println(manhattans.count())
 }
 
 private fun calculateRoute(
@@ -73,38 +61,10 @@ fun adjacent(point: Pair<Int, Int>, hallway: Set<Pair<Int, Int>>): Set<Pair<Int,
     ).filter { it in hallway }.toSet()
 }
 
-fun printgrid(
-    range: Pair<Int, Int>,
-    start: Pair<Int, Int>,
-    end: Pair<Int, Int>,
-    hallway: Set<Pair<Int, Int>>,
-    bridges: List<Pair<Int, Int>>
-) {
-    (0..<range.second).forEach { y ->
-        (0..<range.first).forEach {
-            val gridpoint = it to y
-            when (gridpoint) {
-                start -> {
-                    print("S")
-                }
-
-                end -> {
-                    print("E")
-                }
-
-                in hallway -> {
-                    print(".")
-                }
-
-                in bridges -> {
-                    print("O")
-                }
-
-                else -> {
-                    print("#")
-                }
-            }
+fun manhattansOf(point: Pair<Int, Int>, distance: Int): Set<Pair<Pair<Int, Int>, Int>> {
+    return (-distance..distance).flatMap { x ->
+        (-distance..distance).filter { abs(x) + abs(it) <= distance }.map {
+            (point.first + x to point.second + it) to (abs(x) + abs(it))
         }
-        print("\n")
-    }
+    }.filter { it.first != point }.toSet()
 }
