@@ -26,31 +26,55 @@ val digitGrid = mapOf(
 )
 
 fun main() {
-    getSolution("day21/example.txt")
-    getSolution("day21/input.txt")
+    getSolution("day21/example.txt", 2)
+    getSolution("day21/input.txt", 2)
+//    getSolution("day21/example.txt", 25)
+//    getSolution("day21/input.txt", 25)
 }
 
-fun getSolution(filename: String) {
+fun getSolution(filename: String, level: Int) {
     val numberMap = getNumberMap(numberGrid, 0 to 3)
     val digitMap = getNumberMap(digitGrid, 0 to 0)
+
     val result = Utils.readLines(filename).map {
         val levelOne = getLevel("A" + it, numberMap)
-        val levelTwo = levelOne.flatMap{getLevel("A" + it, digitMap)}
-        val levelThree = levelTwo.flatMap{getLevel("A" + it, digitMap)}
-        it to levelThree.map { it.length }.min()
-    }.map { it.second to it.first.substring(0, it.first.length - 1).toLong()
-    }.onEach { println(it)
+        it to levelOne.map { recursiveDict(it, digitMap, level) }.min()
+    }.map {
+        it.second to it.first.substring(0, it.first.length - 1).toLong()
     }.sumOf { it.first * it.second }
     println(result)
 }
 
-private fun getLevel(line: String, numberMap: Map<String, Set<String>>): Set<String> {
-    val steps = line.windowed(2).map { numberMap[it]!! }
-    var routes = steps.first().toList()
-    steps.drop(1).forEach { step ->
-        routes = routes.flatMap { current -> step.map { current + it } }
+fun recursiveDict(input: String, digitMap: Map<String, Set<String>>, level: Int): Int {
+    if (level == 0) {
+        return input.length
+    } else {
+        return innerToDict(input, digitMap)
+            .map { getLevel(it.key, digitMap) to it.value }.sumOf {
+                it.first.map { recursiveDict(it, digitMap, level - 1) }.min() * it.second
+            }
     }
-    return routes.toSet()
+}
+
+private fun innerToDict(
+    value: String,
+    digitMap: Map<String, Set<String>>,
+): Map<String, Int> {
+    return digitMap.keys.map { key ->
+        key to ("A$value").windowed(2).count { it == key }
+    }.filter { it.second != 0 }.toMap()
+}
+
+private fun getLevel(
+    line: String,
+    numberMap: Map<String, Set<String>>
+): Set<String> {
+    val steps = line.windowed(2).map { numberMap[it]!! }.map { it.toList() }
+    return steps.reduce { acc, step ->
+        acc.flatMap { current ->
+            step.map { current + it }
+        }
+    }.toSet()
 }
 
 private fun getNumberMap(grid: Map<String, Pair<Int, Int>>, forbidden: Pair<Int, Int>): Map<String, Set<String>> {
@@ -61,15 +85,15 @@ private fun getNumberMap(grid: Map<String, Pair<Int, Int>>, forbidden: Pair<Int,
 
 private fun pathsOf(termini: Pair<Pair<Int, Int>, Pair<Int, Int>>, forbidden: Pair<Int, Int>): Set<String> {
     val (begin, end) = termini
-    if(begin == end) return setOf("A")
+    if (begin == end) return setOf("A")
     val x = end.first - begin.first
     val y = end.second - begin.second
-    val xSteps = generateSequence { if(x > 0) 1 else -1 }.map { it to 0 }.take(abs(x)).toList()
-    val ySteps = generateSequence { if(y > 0) 1 else -1 }.map { 0 to it }.take(abs(y)).toList()
+    val xSteps = generateSequence { if (x > 0) 1 else -1 }.map { it to 0 }.take(abs(x)).toList()
+    val ySteps = generateSequence { if (y > 0) 1 else -1 }.map { 0 to it }.take(abs(y)).toList()
     return (xSteps + ySteps).permutations().toSet().filter { route ->
         val places = (1..route.size)
-            .map { route.subList(0, it).reduce{a, b -> a.first + b.first to a.second + b.second} }
-            .map { it.first + begin.first to it.second + begin.second}
+            .map { route.subList(0, it).reduce { a, b -> a.first + b.first to a.second + b.second } }
+            .map { it.first + begin.first to it.second + begin.second }
         forbidden !in places
     }.map { route ->
         route.map {
