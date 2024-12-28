@@ -28,31 +28,43 @@ val digitGrid = mapOf(
 fun main() {
     getSolution("day21/example.txt", 2)
     getSolution("day21/input.txt", 2)
-//    getSolution("day21/example.txt", 25)
-//    getSolution("day21/input.txt", 25)
+    getSolution("day21/example.txt", 25)
+    getSolution("day21/input.txt", 25)
 }
 
 fun getSolution(filename: String, level: Int) {
     val numberMap = getNumberMap(numberGrid, 0 to 3)
     val digitMap = getNumberMap(digitGrid, 0 to 0)
 
+    val cache = mutableMapOf<Pair<String, Int>, Long>()
+
     val result = Utils.readLines(filename).map {
         val levelOne = getLevel("A" + it, numberMap)
-        it to levelOne.map { recursiveDict(it, digitMap, level) }.min()
+        it to levelOne.map { recursiveDict(it, digitMap, level, cache) }.min()
     }.map {
         it.second to it.first.substring(0, it.first.length - 1).toLong()
     }.sumOf { it.first * it.second }
     println(result)
 }
 
-fun recursiveDict(input: String, digitMap: Map<String, Set<String>>, level: Int): Int {
+fun recursiveDict(
+    input: String,
+    digitMap: Map<String, Set<String>>,
+    level: Int,
+    cache: MutableMap<Pair<String, Int>, Long>
+): Long {
+    if (cache.containsKey(input to level)) {
+        return cache[input to level]!!
+    }
     if (level == 0) {
-        return input.length
+        return input.length.toLong()
     } else {
-        return innerToDict(input, digitMap)
+        val result = innerToDict(input, digitMap)
             .map { getLevel(it.key, digitMap) to it.value }.sumOf {
-                it.first.map { recursiveDict(it, digitMap, level - 1) }.min() * it.second
+                it.first.map { recursiveDict(it, digitMap, level - 1, cache) }.min() * it.second
             }
+        cache[input to level] = result
+        return result
     }
 }
 
