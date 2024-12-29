@@ -7,9 +7,33 @@ import java.math.BigInteger.*
 fun main() {
     getSolutionA("day17/example1.txt")
     getSolutionA("day17/input.txt")
-//    getSolutionB("day17/example2.txt")
-    // 110270259759514 too high
-    getSolutionB("day17/input.txt")
+    getSolutionB(
+        "day17/example2.txt",
+        8 * 8 * 3L +
+                8 * 8 * 8 * 5L +
+                8 * 8 * 8 * 8 * 4L +
+                8 * 8 * 8 * 8 * 8 * 3L
+    )
+
+    getSolutionB(
+        "day17/input.txt",
+        2L +
+                8L * 3L +
+                8L * 8 * 6L +
+                8L * 8 * 8 * 4L +
+                8L * 8 * 8 * 8 * 0L +
+                8L * 8 * 8 * 8 * 8 * 3L +
+                8L * 8 * 8 * 8 * 8 * 8 * 2L +
+                8L * 8 * 8 * 8 * 8 * 8 * 8 * 5L +
+                8L * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 3L +
+                8L * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 1L +
+                8L * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 1L +
+                8L * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 5L +
+                8L * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 2L +
+                8L * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 0L +
+                8L * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 0L +
+                8L * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 8 * 3L
+    )
 }
 
 fun getSolutionA(filename: String) {
@@ -19,27 +43,15 @@ fun getSolutionA(filename: String) {
     println(output.joinToString(",") { it.toString() })
 }
 
-fun getSolutionB(filename: String) {
+fun getSolutionB(filename: String, initial: Long) {
     val (_, instructions) = readAndSplitFile(filename)
-    var result = 0L
     val register = mutableMapOf('A' to 0L, 'B' to 0L, 'C' to 0L)
-    val initial =
-        (valueOf(8L).pow(15).times(valueOf(3)))
-            .add((valueOf(8L).pow(12)))
-            .add((valueOf(8L).pow(11)).times(valueOf(8)))
-            .add((valueOf(8L).pow(10)).times(valueOf(2)))
-    for(i in generateSequence(initial){ it.add(ONE) }) {
-        register['A'] = i.toLong()
-        register['B'] = 0
-        register['C'] = 0
-        val output = execute(instructions, register)
-        if (instructions == output){
-            result = i.toLong()
-            break
-        }
-        println(output)
-    }
-    println(result)
+    register['A'] = initial
+    register['B'] = 0
+    register['C'] = 0
+    val output = execute(instructions, register)
+    println(output == instructions)
+    println(initial)
 }
 
 private fun readAndSplitFile(filename: String): Pair<List<Long>, List<Long>> {
